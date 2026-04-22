@@ -1,4 +1,4 @@
-# RideSync — PDC Ride Matching with Traffic-Aware Routing
+# RideSync⚡ – PDC Ride Match x Traffic-aware Routing
 
 Distributed ride-matching system built with Java 17 and Maven.
 
