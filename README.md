@@ -3,9 +3,9 @@
 Distributed ride-matching system built with Java 17 and Maven.
 
 ## Members
-- **Mohid Arshad** — Data Layer & Dataset Generation  
-- **Fatima Ehsan Niazi** — Matching Engine  
-- **M Umair Shakoor & Mohid Arshad** — Distributed Network Layer  
+- **Mohid Arshad** — Data Layer & Dataset Generation  ([akamohid](https://github.com/akamohid))  
+- **Fatima Ehsan Niazi** — Matching Engine  ([fatimaehsanniazi](https://github.com/fatimaehsanniazi))  
+- **M Umair Shakoor & Mohid Arshad** — Distributed Network Layer  ([Big-Raga](https://github.com/Big-Raga)
 
 ## Prerequisites
 - Java 17+
