@@ -22,6 +22,12 @@ powershell -ExecutionPolicy Bypass -File scripts\generate-datasets.ps1
 ```
 Generates `small`, `medium`, and `large` CSV datasets under `data\`.
 
+## Sequential Baseline
+
+```powershell
+java -Xmx512m -jar target\pdc-ride-matching-1.0.0.jar baseline --dataset data\small --output results\baseline-small.csv
+```
+
 ## Run (Distributed Mode)
 
 ```bash
@@ -37,6 +43,21 @@ java -Xmx512m -jar target\pdc-ride-matching-1.0.0.jar worker --id worker-2 --hos
 # Window 4
 java -Xmx512m -jar target\pdc-ride-matching-1.0.0.jar worker --id worker-3 --host 127.0.0.1 --port 5002 --threads 4
 ```
+
+## Plot CSV Results
+
+Install plotting dependencies:
+
+```powershell
+python -m pip install matplotlib
+```
+
+Generate a graph from a CSV file with columns such as `workers,speedup,efficiency`:
+
+```powershell
+python scripts\plot_results.py results\speedup.csv results\speedup.png
+```
+
 
 ## Project Structure
 ```
