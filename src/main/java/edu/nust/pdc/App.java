@@ -67,7 +67,7 @@ public final class App {
             System.out.println("Max candidates per rider: " + maxCandidates);
         }
         long totalStart = System.nanoTime();
-        long computeNanos = new MasterServer(dataset, port, batchSize, maxCandidates).serve(output);
+        long computeNanos = new MasterServer(dataset, port, workers, batchSize, maxCandidates).serve(output);
         long totalElapsed = System.nanoTime() - totalStart;
         System.out.println("Distributed completed in " + formatMillis(computeNanos) + " ms (compute only)");
         System.out.println("Distributed total time   " + formatMillis(totalElapsed) + " ms (includes connection wait)");
