@@ -52,40 +52,40 @@ java -Xmx512m -jar target\pdc-ride-matching-1.0.0.jar baseline --dataset data\sm
 
 ## Distributed Run
 
-Start the master and 3 workers on the small dataset:
+Start the master and 3 workers on the small dataset with baseline-equivalent matching (`MaxCandidates=0`):
 
 ```powershell
 .\scripts\run-distributed.ps1 -Scale small -Workers 3 -Threads 4 -Port 5002 -BatchSize 2048
 ```
 
 Or use the CMD script (recommended — launches workers simultaneously):
-# One-command launch with K=10
+# One-command launch with full candidate matching
 
 ```cmd
-scripts\run-distributed.cmd small 3 4 10
+scripts\run-distributed.cmd small 3 4 0
 ```
 
 Manual launch in separate terminals:
 
 ```powershell
 # Terminal 1 — Master
-# Or manually with --max-candidates
-java -Xmx512m -jar target\pdc-ride-matching-1.0.0.jar master --dataset data\small --workers 3 --port 5002 --batch-size 2048 --max-candidates 10 --output results\distributed-small.csv
+# Use --max-candidates 0 for exact baseline equivalence
+java -Xmx2048m -jar target\pdc-ride-matching-1.0.0.jar master --dataset data\small --workers 3 --port 5002 --batch-size 2048 --max-candidates 0 --output results\distributed-small.csv
 ```
 
 ```powershell
 # Terminal 2 — Worker 1
-java -Xmx512m -jar target\pdc-ride-matching-1.0.0.jar worker --id worker-1 --host 127.0.0.1 --port 5002 --threads 4
+java -Xmx2048m -jar target\pdc-ride-matching-1.0.0.jar worker --id worker-1 --host 127.0.0.1 --port 5002 --threads 4
 ```
 
 ```powershell
 # Terminal 3 — Worker 2
-java -Xmx512m -jar target\pdc-ride-matching-1.0.0.jar worker --id worker-2 --host 127.0.0.1 --port 5002 --threads 4
+java -Xmx2048m -jar target\pdc-ride-matching-1.0.0.jar worker --id worker-2 --host 127.0.0.1 --port 5002 --threads 4
 ```
 
 ```powershell
 # Terminal 4 — Worker 3
-java -Xmx512m -jar target\pdc-ride-matching-1.0.0.jar worker --id worker-3 --host 127.0.0.1 --port 5002 --threads 4
+java -Xmx2048m -jar target\pdc-ride-matching-1.0.0.jar worker --id worker-3 --host 127.0.0.1 --port 5002 --threads 4
 ```
 
 ## Verify Correctness
@@ -97,6 +97,8 @@ Compare-Object (Get-Content results\baseline-small.csv) (Get-Content results\dis
 ```
 
 An empty result means the files match.
+
+If you want the distributed run to stay identical to the sequential baseline, keep `--max-candidates 0`. Any positive value changes the candidate set and can change the output.
 
 ## Benchmark
 

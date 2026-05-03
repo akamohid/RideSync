@@ -1,0 +1,7 @@
+{
+  "name": "large",
+  "searchRadius": 5,
+  "gridWidth": 150,
+  "gridHeight": 150,
+  "cellSize": 10.0
+}

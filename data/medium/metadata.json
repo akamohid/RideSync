@@ -1,0 +1,7 @@
+{
+  "name": "medium",
+  "searchRadius": 4,
+  "gridWidth": 100,
+  "gridHeight": 100,
+  "cellSize": 10.0
+}

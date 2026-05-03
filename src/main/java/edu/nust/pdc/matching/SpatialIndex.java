@@ -143,13 +143,12 @@ public final class SpatialIndex {
             }
             return ids;
         } else {
-            // For larger arrays, build index and sort
-            Integer[] order = new Integer[count];
-            for (int i = 0; i < count; i++) order[i] = i;
-            java.util.Arrays.sort(order, (a, b) -> {
-                int cmp = Double.compare(scores[a], scores[b]);
-                return cmp != 0 ? cmp : Integer.compare(ids[a], ids[b]);
-            });
+            // For larger arrays, sort a primitive index array to avoid boxing overhead.
+            int[] order = new int[count];
+            for (int i = 0; i < count; i++) {
+                order[i] = i;
+            }
+            sortIndices(order, scores, ids, 0, count - 1);
             int[] sortedIds = new int[k];
             for (int i = 0; i < k; i++) sortedIds[i] = ids[order[i]];
             return sortedIds;
@@ -163,5 +162,39 @@ public final class SpatialIndex {
 
     public List<Driver> allDriversInCell(int row, int col) {
         return Collections.unmodifiableList(buckets[row][col]);
+    }
+
+    private static void sortIndices(int[] order, double[] scores, int[] ids, int left, int right) {
+        int i = left;
+        int j = right;
+        int pivot = order[left + ((right - left) >>> 1)];
+
+        while (i <= j) {
+            while (compare(order[i], pivot, scores, ids) < 0) {
+                i++;
+            }
+            while (compare(order[j], pivot, scores, ids) > 0) {
+                j--;
+            }
+            if (i <= j) {
+                int tmp = order[i];
+                order[i] = order[j];
+                order[j] = tmp;
+                i++;
+                j--;
+            }
+        }
+
+        if (left < j) {
+            sortIndices(order, scores, ids, left, j);
+        }
+        if (i < right) {
+            sortIndices(order, scores, ids, i, right);
+        }
+    }
+
+    private static int compare(int a, int b, double[] scores, int[] ids) {
+        int cmp = Double.compare(scores[a], scores[b]);
+        return cmp != 0 ? cmp : Integer.compare(ids[a], ids[b]);
     }
 }

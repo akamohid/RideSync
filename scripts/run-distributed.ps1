@@ -21,7 +21,7 @@ if (-not $jar) {
     throw 'Could not find the project jar in target/.'
 }
 
-$javaOpts = @('-Xmx512m', '-XX:TieredStopAtLevel=1', '-XX:+UseParallelGC')
+$javaOpts = @('-Xmx2048m', '-XX:TieredStopAtLevel=1', '-XX:+UseParallelGC')
 $dataset = "$root\data\$Scale"
 $masterArgs = @('master', '--dataset', $dataset, '--workers', $Workers, '--port', $Port, '--batch-size', $BatchSize, '--output', "$root\results\distributed-$Scale.csv")
 

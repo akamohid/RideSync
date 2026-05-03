@@ -1,0 +1,7 @@
+{
+  "name": "small",
+  "searchRadius": 3,
+  "gridWidth": 50,
+  "gridHeight": 50,
+  "cellSize": 10.0
+}

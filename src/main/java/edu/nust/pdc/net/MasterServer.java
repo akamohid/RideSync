@@ -18,7 +18,9 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.concurrent.CountDownLatch;
+import java.util.PriorityQueue;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 
 /**
  * High-performance master server using binary socket protocol.
@@ -74,10 +76,10 @@ public final class MasterServer {
 
         // ─── Per-worker claim storage (no concurrent map overhead) ───
         @SuppressWarnings("unchecked")
-        List<ClaimEntry>[] workerClaims = new List[expectedWorkers];
-        for (int i = 0; i < expectedWorkers; i++) workerClaims[i] = new ArrayList<>();
-
-        CountDownLatch claimsDone = new CountDownLatch(expectedWorkers);
+        BlockingQueue<ClaimEntry>[] workerClaims = new BlockingQueue[expectedWorkers];
+        for (int i = 0; i < expectedWorkers; i++) {
+            workerClaims[i] = new ArrayBlockingQueue<>(1);
+        }
 
         try (ServerSocket ss = new ServerSocket(port)) {
             ss.setReuseAddress(true);
@@ -119,21 +121,10 @@ public final class MasterServer {
             for (int i = 0; i < expectedWorkers; i++) {
                 final int wi = i;
                 handlers[i] = new Thread(() ->
-                    handleWorker(wi, ins[wi], outs[wi], assignments[wi],
-                                 workerClaims[wi], claimsDone),
+                    handleWorker(wi, ins[wi], outs[wi], assignments[wi], workerClaims[wi]),
                     "handler-" + i);
                 handlers[i].start();
             }
-
-            // Wait for all claims from all workers
-            claimsDone.await();
-
-            // ─── Merge & sort claims by riderIndex (deterministic order) ───
-            int totalClaims = 0;
-            for (List<ClaimEntry> wc : workerClaims) totalClaims += wc.size();
-            List<ClaimEntry> sorted = new ArrayList<>(totalClaims);
-            for (List<ClaimEntry> wc : workerClaims) sorted.addAll(wc);
-            sorted.sort(Comparator.comparingInt(c -> c.riderIndex));
 
             // ─── Resolve claims + compute travel times (master-side) ───
             boolean[] available = new boolean[dataset.drivers.size()];
@@ -141,8 +132,18 @@ public final class MasterServer {
                 available[i] = dataset.drivers.get(i).available;
             }
 
-            List<MatchResult> results = new ArrayList<>(totalClaims);
-            for (ClaimEntry claim : sorted) {
+            List<MatchResult> results = new ArrayList<>(dataset.riders.size());
+            PriorityQueue<WorkerCursor> queue = new PriorityQueue<>(Comparator.comparingInt(cursor -> cursor.claim.riderIndex));
+            for (int workerIndex = 0; workerIndex < workerClaims.length; workerIndex++) {
+                ClaimEntry firstClaim = workerClaims[workerIndex].take();
+                if (firstClaim != ClaimEntry.END) {
+                    queue.add(new WorkerCursor(workerIndex, firstClaim));
+                }
+            }
+
+            while (!queue.isEmpty()) {
+                WorkerCursor cursor = queue.poll();
+                ClaimEntry claim = cursor.claim;
                 boolean matched = false;
                 for (int did : claim.candidateIds) {
                     if (did >= 0 && did < available.length && available[did]) {
@@ -157,6 +158,11 @@ public final class MasterServer {
                 }
                 if (!matched) {
                     results.add(new MatchResult(claim.riderId, null, null, false));
+                }
+
+                ClaimEntry nextClaim = workerClaims[cursor.workerIndex].take();
+                if (nextClaim != ClaimEntry.END) {
+                    queue.add(new WorkerCursor(cursor.workerIndex, nextClaim));
                 }
             }
 
@@ -188,8 +194,7 @@ public final class MasterServer {
     // ────── Handler logic (one thread per worker) ──────
 
     private void handleWorker(int index, DataInputStream in, DataOutputStream out,
-                              List<int[]> batches, List<ClaimEntry> claims,
-                              CountDownLatch claimsDone) {
+                              List<int[]> batches, BlockingQueue<ClaimEntry> claims) {
         try {
             // Send batch assignments with inline rider data (binary)
             for (int[] range : batches) {
@@ -218,12 +223,18 @@ public final class MasterServer {
                 for (int j = 0; j < numCand; j++) {
                     candIds[j] = in.readInt();
                 }
-                claims.add(new ClaimEntry(riderIdx, riderId, candIds));
+                claims.put(new ClaimEntry(riderIdx, riderId, candIds));
             }
         } catch (IOException e) {
             System.err.println("Handler-" + index + " error: " + e.getMessage());
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
         } finally {
-            claimsDone.countDown();
+            try {
+                claims.put(ClaimEntry.END);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
         }
     }
 
@@ -267,6 +278,8 @@ public final class MasterServer {
     // ────── Inner types ──────
 
     private static final class ClaimEntry {
+        static final ClaimEntry END = new ClaimEntry(-1, -1, new int[0]);
+
         final int riderIndex, riderId;
         final int[] candidateIds;
 
@@ -274,6 +287,16 @@ public final class MasterServer {
             this.riderIndex = riderIndex;
             this.riderId = riderId;
             this.candidateIds = candidateIds;
+        }
+    }
+
+    private static final class WorkerCursor {
+        final int workerIndex;
+        final ClaimEntry claim;
+
+        WorkerCursor(int workerIndex, ClaimEntry claim) {
+            this.workerIndex = workerIndex;
+            this.claim = claim;
         }
     }
 }
