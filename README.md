@@ -1,26 +1,48 @@
-# RideSync⚡ – PDC Ride Match x Traffic-aware Routing
+# PDC Ride Matching
 
-Distributed ride-matching system built with Java 17 and Maven.
+This is a Maven-based Java project for CS-347 Parallel & Distributed Computing.
 
-## Members
-- **Mohid Arshad** ([akamohid](https://github.com/akamohid)) — Data Layer & Dataset Generation 
-- **Fatima Ehsan Niazi** ([fatimaehsanniazi](https://github.com/fatimaehsanniazi)) — Matching Engine   
-- **M Umair Shakoor ([Big-Raga](https://github.com/Big-Raga)) & Mohid Arshad** ([akamohid](https://github.com/akamohid)) — Distributed Network Layer  
+It includes:
 
-## Prerequisites
-- Java 17+
-- Maven 3.8+
+- a sequential baseline
+- a threaded worker implementation
+- a master-worker socket protocol
+- an automatic dataset generator
+- CSV result export and a plotting helper
+
+## Requirements
+
+- Java 17
+- Maven 3.9+
+- PowerShell on Windows
 
 ## Build
-```bash
-mvn clean package
+
+```powershell
+mvn clean test package
 ```
 
+The executable jar is created in `target/`.
+
 ## Generate Datasets
+
+The project generates three deterministic dataset tiers:
+
+- `small`: 10,000 drivers, 50,000 riders, 50x50 grid
+- `medium`: 100,000 drivers, 500,000 riders, 100x100 grid
+- `large`: 200,000 drivers, 1,000,000 riders, 150x150 grid
+
+Run all dataset generators:
+
 ```powershell
-powershell -ExecutionPolicy Bypass -File scripts\generate-datasets.ps1
+.\scripts\generate-datasets.ps1
 ```
-Generates `small`, `medium`, and `large` CSV datasets under `data\`.
+
+You can also generate a single dataset manually:
+
+```powershell
+java -jar target\pdc-ride-matching-1.0.0.jar generate-data --scale small --output data\small
+```
 
 ## Sequential Baseline
 
@@ -28,20 +50,66 @@ Generates `small`, `medium`, and `large` CSV datasets under `data\`.
 java -Xmx512m -jar target\pdc-ride-matching-1.0.0.jar baseline --dataset data\small --output results\baseline-small.csv
 ```
 
-## Run (Distributed Mode)
+## Distributed Run
 
-```bash
-# Window 1 – Master
+Start the master and 3 workers on the small dataset:
+
+```powershell
+.\scripts\run-distributed.ps1 -Scale small -Workers 3 -Threads 4 -Port 5002 -BatchSize 2048
+```
+
+Or use the CMD script (recommended — launches workers simultaneously):
+# One-command launch with K=10
+
+```cmd
+scripts\run-distributed.cmd small 3 4 10
+```
+
+Manual launch in separate terminals:
+
+```powershell
+# Terminal 1 — Master
+# Or manually with --max-candidates
 java -Xmx512m -jar target\pdc-ride-matching-1.0.0.jar master --dataset data\small --workers 3 --port 5002 --batch-size 2048 --max-candidates 10 --output results\distributed-small.csv
+```
 
-# Window 2
+```powershell
+# Terminal 2 — Worker 1
 java -Xmx512m -jar target\pdc-ride-matching-1.0.0.jar worker --id worker-1 --host 127.0.0.1 --port 5002 --threads 4
+```
 
-# Window 3
+```powershell
+# Terminal 3 — Worker 2
 java -Xmx512m -jar target\pdc-ride-matching-1.0.0.jar worker --id worker-2 --host 127.0.0.1 --port 5002 --threads 4
+```
 
-# Window 4
+```powershell
+# Terminal 4 — Worker 3
 java -Xmx512m -jar target\pdc-ride-matching-1.0.0.jar worker --id worker-3 --host 127.0.0.1 --port 5002 --threads 4
+```
+
+## Verify Correctness
+
+Compare the baseline and distributed outputs with PowerShell:
+
+```powershell
+Compare-Object (Get-Content results\baseline-small.csv) (Get-Content results\distributed-small.csv)
+```
+
+An empty result means the files match.
+
+## Benchmark
+
+Run the baseline benchmark output generator:
+
+```powershell
+java -jar target\pdc-ride-matching-1.0.0.jar benchmark --dataset data\small
+```
+
+Run automated speedup/efficiency/Amdahl experiments and export CSV:
+
+```powershell
+.\scripts\run-experiments.ps1 -Scale small -Workers 1,2,4,8 -Threads 4 -OutputCsv results\speedup.csv
 ```
 
 ## Plot CSV Results
@@ -58,34 +126,18 @@ Generate a graph from a CSV file with columns such as `workers,speedup,efficienc
 python scripts\plot_results.py results\speedup.csv results\speedup.png
 ```
 
+## Commands Summary
 
-## Project Structure
+```powershell
+mvn clean test package
+java -Xmx512m -jar target\pdc-ride-matching-1.0.0.jar generate-data --scale small --output data\small
+java -Xmx512m -jar target\pdc-ride-matching-1.0.0.jar generate-data --scale medium --output data\medium
+java -Xmx512m -jar target\pdc-ride-matching-1.0.0.jar generate-data --scale large --output data\large
+java -Xmx512m -jar target\pdc-ride-matching-1.0.0.jar baseline --dataset data\small --output results\baseline-small.csv
+java -Xmx512m -jar target\pdc-ride-matching-1.0.0.jar master --dataset data\small --workers 3 --port 5002 --batch-size 2048 --max-candidates 10 --output results\distributed-small.csv
+java -Xmx512m -jar target\pdc-ride-matching-1.0.0.jar worker --id worker-1 --host 127.0.0.1 --port 5002 --threads 4
+java -Xmx512m -jar target\pdc-ride-matching-1.0.0.jar worker --id worker-2 --host 127.0.0.1 --port 5002 --threads 4
+java -Xmx512m -jar target\pdc-ride-matching-1.0.0.jar worker --id worker-3 --host 127.0.0.1 --port 5002 --threads 4
+scripts\run-distributed.cmd small 3 4 10
+.\scripts\run-experiments.ps1 -Scale small -Workers 1,2,4,8 -Threads 4 -OutputCsv results\speedup.csv
 ```
-src/main/java/edu/nust/pdc/
-├── config/       # Scale profiles (small / medium / large)
-├── data/         # POJOs and I/O
-├── dataset/      # Dataset generator
-├── matching/     # Matching engine
-└── net/          # Network layer
-```
-
-## Data Models
-| Class | Description |
-|---|---|
-| `Rider` | Rider ID + pickup coordinates |
-| `Driver` | Driver ID + location + availability |
-| `Dataset` | Container for riders, drivers, and grid |
-| `TrafficGrid` | 2D congestion grid with congestion lookup |
-| `Batch` | Subset of riders sent to a worker |
-| `MatchResult` | Final matched rider-driver pair |
-
-## I/O & Generation
-| Class | Description |
-|---|---|
-| `DatasetIO` | Reads & writes CSV/JSON datasets and results |
-| `DatasetGenerator` | Seeded deterministic data generation for all 3 scales |
-
-## Status
-- [x] Step 1 — Project setup & config
-- [x] Step 2 — Data model POJOs
-- [x] Step 3 — I/O & Generation ✅
