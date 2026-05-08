@@ -14,7 +14,7 @@ set BATCHSIZE=2048
 set JAR=target\pdc-ride-matching-1.0.0.jar
 set DATASET=data\%SCALE%
 set OUTPUT=results\distributed-%SCALE%.csv
-set JAVA_OPTS=-Xmx2048m -XX:TieredStopAtLevel=1 -XX:+UseParallelGC
+set JAVA_OPTS=-Xmx8192m -XX:TieredStopAtLevel=1 -XX:+UseParallelGC
 
 echo === PDC Distributed Ride Matching ===
 echo Scale=%SCALE% Workers=%WORKERS% Threads=%THREADS% BatchSize=%BATCHSIZE% MaxCandidates=%MAX_CANDIDATES%
