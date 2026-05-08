@@ -35,12 +35,25 @@ public final class WorkerClient {
     private final String host;
     private final int port;
     private final int threads;
+    private final int chunkSize;
 
     public WorkerClient(String workerId, String host, int port, int threads) {
+        this(workerId, host, port, threads, 0);
+    }
+
+    /**
+     * @param chunkSize if > 0, divide work into chunks of this size for fine-grained
+     *                  load balancing. If 0, use the original coarse division
+     *                  (totalRiders / threads tasks). Fine-grained chunking eliminates
+     *                  thread idle time caused by uneven per-rider work (riders in
+     *                  dense grid cells evaluate more candidate drivers than sparse ones).
+     */
+    public WorkerClient(String workerId, String host, int port, int threads, int chunkSize) {
         this.workerId = workerId;
         this.host = host;
         this.port = port;
         this.threads = threads;
+        this.chunkSize = chunkSize;
     }
 
     @SuppressWarnings("unchecked")
@@ -116,14 +129,20 @@ public final class WorkerClient {
 
             ExecutorService pool = Executors.newFixedThreadPool(threads);
             try {
-                int chunk = Math.max(1, (totalRiders + threads - 1) / threads);
+                // Fine-grained chunking: when chunkSize > 0, divide into many small tasks
+                // so the thread pool's work queue self-balances load across threads.
+                // Riders in dense grid areas evaluate far more candidate drivers than
+                // riders in sparse areas; coarse equal-size chunks leave faster threads
+                // idle. Fine-grained chunks eliminate this idle time automatically.
+                int chunk = (chunkSize > 0)
+                    ? chunkSize
+                    : Math.max(1, (totalRiders + threads - 1) / threads);
                 List<Future<?>> futures = new ArrayList<>();
-                for (int t = 0; t < threads; t++) {
-                    final int start = t * chunk;
+                for (int start = 0; start < totalRiders; start += chunk) {
+                    final int s = start;
                     final int end = Math.min(totalRiders, start + chunk);
-                    if (start >= end) break;
                     futures.add(pool.submit((Callable<Void>) () -> {
-                        for (int i = start; i < end; i++) {
+                        for (int i = s; i < end; i++) {
                             candidateIds[i] = spatialIndex.rankCandidateIds(
                                 riders.get(i), searchRadius, maxCandidates);
                         }

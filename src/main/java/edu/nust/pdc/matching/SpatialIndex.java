@@ -17,6 +17,16 @@ public final class SpatialIndex {
     private final List<Driver>[][] buckets;
     private final TrafficGrid grid;
 
+    // Struct-of-arrays (SoA) layout for the high-frequency distributed path.
+    // Instead of iterating List<Driver> objects (heap-scattered, pointer-chased),
+    // the X/Y coordinates for all drivers in each cell are packed into contiguous
+    // primitive arrays. Sequential access within a cell fits in L1/L2 cache lines,
+    // eliminating per-driver cache misses in the rankCandidateIds() hot loop.
+    // rankCandidates() (sequential baseline) still uses the original buckets.
+    private final double[][][] cellX;
+    private final double[][][] cellY;
+    private final int[][][] cellIds;
+
     @SuppressWarnings("unchecked")
     public SpatialIndex(List<Driver> drivers, TrafficGrid grid) {
         this.width = grid.width;
@@ -33,6 +43,29 @@ public final class SpatialIndex {
             int cellX = clampIndex((int) Math.floor(driver.locationX / cellSize), width);
             int cellY = clampIndex((int) Math.floor(driver.locationY / cellSize), height);
             buckets[cellY][cellX].add(driver);
+        }
+
+        // Build SoA parallel arrays from the populated buckets.
+        this.cellX   = new double[height][width][];
+        this.cellY   = new double[height][width][];
+        this.cellIds = new int[height][width][];
+        for (int row = 0; row < height; row++) {
+            for (int col = 0; col < width; col++) {
+                List<Driver> cell = buckets[row][col];
+                int n = cell.size();
+                double[] xs  = new double[n];
+                double[] ys  = new double[n];
+                int[]    ids = new int[n];
+                for (int k = 0; k < n; k++) {
+                    Driver d = cell.get(k);
+                    xs[k]  = d.locationX;
+                    ys[k]  = d.locationY;
+                    ids[k] = d.driverId;
+                }
+                this.cellX[row][col]   = xs;
+                this.cellY[row][col]   = ys;
+                this.cellIds[row][col] = ids;
+            }
         }
     }
 
@@ -80,6 +113,13 @@ public final class SpatialIndex {
      * Uses primitive arrays to avoid millions of Candidate object allocations.
      * Used by the distributed worker path for maximum throughput.
      *
+     * <p>The fill loop uses the SoA (struct-of-arrays) cell layout so that
+     * driver X/Y coordinates are read sequentially from contiguous double[]
+     * arrays rather than chasing pointers to scattered Driver heap objects.
+     * For a cell with N drivers, all N X-coordinates occupy N×8 bytes —
+     * typically 1–2 cache lines — compared to N separate heap object accesses
+     * that each may miss L1/L2 cache.
+     *
      * @param maxK if positive, return only the top-K closest candidates
      *             (reduces network transfer and master resolution work).
      *             Use 0 or negative to return all candidates.
@@ -93,24 +133,37 @@ public final class SpatialIndex {
         int minCol = Math.max(0, centerX - radius);
         int maxCol = Math.min(width - 1, centerX + radius);
 
-        // Count candidates first to pre-allocate arrays
+        // Count candidates first to pre-allocate arrays (SoA: use array length)
         int count = 0;
         for (int row = minRow; row <= maxRow; row++) {
             for (int col = minCol; col <= maxCol; col++) {
-                count += buckets[row][col].size();
+                count += cellX[row][col].length;
             }
         }
         if (count == 0) return new int[0];
 
-        // Fill parallel arrays (avoids Candidate object allocation)
+        // Fill parallel arrays using SoA layout.
+        // bX[k] / bY[k] are contiguous doubles — sequential cache-line reads.
+        // This eliminates the per-driver pointer dereference from List<Driver>.
         double[] scores = new double[count];
         int[] ids = new int[count];
         int idx = 0;
+        final double riderX = rider.pickupX;
+        final double riderY = rider.pickupY;
         for (int row = minRow; row <= maxRow; row++) {
             for (int col = minCol; col <= maxCol; col++) {
-                for (Driver driver : buckets[row][col]) {
-                    scores[idx] = score(rider, driver);
-                    ids[idx] = driver.driverId;
+                final double[] bX  = cellX[row][col];
+                final double[] bY  = cellY[row][col];
+                final int[]    bId = cellIds[row][col];
+                final int n = bX.length;
+                for (int k = 0; k < n; k++) {
+                    double dx = riderX - bX[k];
+                    double dy = riderY - bY[k];
+                    double distance = Math.sqrt(dx * dx + dy * dy);
+                    double midX = (riderX + bX[k]) * 0.5;
+                    double midY = (riderY + bY[k]) * 0.5;
+                    scores[idx] = distance * grid.congestionAt(midX, midY);
+                    ids[idx]    = bId[k];
                     idx++;
                 }
             }

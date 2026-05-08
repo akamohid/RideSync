@@ -1,0 +1,153 @@
+PS C:\Users\umair\Downloads\PDC (2)\project\RideSync> java -Xmx2048m -jar target\pdc-ride-matching-1.0.0.jar baseline --dataset data\small --output results\baseline-small.csv
+Baseline completed in 933.658 ms
+Results written to C:\Users\umair\Downloads\PDC (2)\project\RideSync\results\baseline-small.csv
+PS C:\Users\umair\Downloads\PDC (2)\project\RideSync> scripts\run-distributed.cmd small 1 4 0
+=== PDC Distributed Ride Matching ===
+Scale=small Workers=1 Threads=4 BatchSize=2048 MaxCandidates=0
+
+Distributed completed in 720.653 ms (compute only)
+Distributed total time   871.410 ms (includes connection wait)
+Distributed output written to C:\Users\umair\Downloads\PDC (2)\project\RideSync\results\distributed-small.csv
+
+=== Done ===
+PS C:\Users\umair\Downloads\PDC (2)\project\RideSync> scripts\run-distributed.cmd small 2 4 0
+=== PDC Distributed Ride Matching ===
+Scale=small Workers=2 Threads=4 BatchSize=2048 MaxCandidates=0
+
+Distributed completed in 615.942 ms (compute only)
+Distributed total time   780.494 ms (includes connection wait)
+Distributed output written to C:\Users\umair\Downloads\PDC (2)\project\RideSync\results\distributed-small.csv
+
+=== Done ===
+PS C:\Users\umair\Downloads\PDC (2)\project\RideSync> scripts\run-distributed.cmd small 4 4 0
+=== PDC Distributed Ride Matching ===
+Scale=small Workers=4 Threads=4 BatchSize=2048 MaxCandidates=0
+
+Distributed completed in 609.108 ms (compute only)
+Distributed total time   761.403 ms (includes connection wait)
+Distributed output written to C:\Users\umair\Downloads\PDC (2)\project\RideSync\results\distributed-small.csvPS C:\Users\umair\Downloads\PDC (2)\project\RideSync> java -Xmx2048m -jar target\pdc-ride-matching-1.0.0.jar baseline --dataset data\small --output results\baseline-small.csv
+Baseline completed in 933.658 ms
+Results written to C:\Users\umair\Downloads\PDC (2)\project\RideSync\results\baseline-small.csv
+PS C:\Users\umair\Downloads\PDC (2)\project\RideSync> scripts\run-distributed.cmd small 1 4 0
+=== PDC Distributed Ride Matching ===
+Scale=small Workers=1 Threads=4 BatchSize=2048 MaxCandidates=0
+
+Distributed completed in 720.653 ms (compute only)
+Distributed total time   871.410 ms (includes connection wait)
+Distributed output written to C:\Users\umair\Downloads\PDC (2)\project\RideSync\results\distributed-small.csv
+
+=== Done ===
+PS C:\Users\umair\Downloads\PDC (2)\project\RideSync> scripts\run-distributed.cmd small 2 4 0
+=== PDC Distributed Ride Matching ===
+Scale=small Workers=2 Threads=4 BatchSize=2048 MaxCandidates=0
+
+Distributed completed in 615.942 ms (compute only)
+Distributed total time   780.494 ms (includes connection wait)
+Distributed output written to C:\Users\umair\Downloads\PDC (2)\project\RideSync\results\distributed-small.csv
+
+=== Done ===
+PS C:\Users\umair\Downloads\PDC (2)\project\RideSync> scripts\run-distributed.cmd small 4 4 0
+=== PDC Distributed Ride Matching ===
+Scale=small Workers=4 Threads=4 BatchSize=2048 MaxCandidates=0
+
+Distributed completed in 609.108 ms (compute only)
+Distributed total time   761.403 ms (includes connection wait)
+Distributed output written to C:\Users\umair\Downloads\PDC (2)\project\RideSync\results\distributed-small.csv
+
+=== Done ===
+PS C:\Users\umair\Downloads\PDC (2)\project\RideSync> scripts\run-distributed.cmd small 8 4 0
+=== PDC Distributed Ride Matching ===
+Scale=small Workers=8 Threads=4 BatchSize=2048 MaxCandidates=0
+
+Distributed completed in 606.777 ms (compute only)
+Distributed total time   778.639 ms (includes connection wait)
+Distributed output written to C:\Users\umair\Downloads\PDC (2)\project\RideSync\results\distributed-small.csv
+
+
+PS C:\Users\umair\Downloads\PDC (2)\project\RideSync> java -Xmx2048m -jar target\pdc-ride-matching-1.0.0.jar baseline --dataset data\medium --output results\baseline-medium.csv
+Baseline completed in 40364.462 ms
+Results written to C:\Users\umair\Downloads\PDC (2)\project\RideSync\results\baseline-medium.csv
+PS C:\Users\umair\Downloads\PDC (2)\project\RideSync> scripts\run-distributed.cmd medium 1 4 0
+=== PDC Distributed Ride Matching ===
+Scale=medium Workers=1 Threads=4 BatchSize=2048 MaxCandidates=0
+
+Distributed completed in 25680.589 ms (compute only)
+Distributed total time   26023.941 ms (includes connection wait)
+Distributed output written to C:\Users\umair\Downloads\PDC (2)\project\RideSync\results\distributed-medium.csv
+
+=== Done ===
+PS C:\Users\umair\Downloads\PDC (2)\project\RideSync> scripts\run-distributed.cmd medium 2 4 0
+=== PDC Distributed Ride Matching ===
+Scale=medium Workers=2 Threads=4 BatchSize=2048 MaxCandidates=0
+
+Distributed completed in 21589.869 ms (compute only)
+Distributed total time   21837.857 ms (includes connection wait)
+Distributed output written to C:\Users\umair\Downloads\PDC (2)\project\RideSync\results\distributed-medium.csv
+
+=== Done ===
+PS C:\Users\umair\Downloads\PDC (2)\project\RideSync> scripts\run-distributed.cmd medium 4 4 0
+=== PDC Distributed Ride Matching ===
+Scale=medium Workers=4 Threads=4 BatchSize=2048 MaxCandidates=0
+
+Distributed completed in 20794.213 ms (compute only)
+Distributed total time   21083.437 ms (includes connection wait)
+Distributed output written to C:\Users\umair\Downloads\PDC (2)\project\RideSync\results\distributed-medium.csv
+
+=== Done ===
+
+
+PS C:\Users\umair\Downloads\PDC (2)\project\RideSync> scripts\run-distributed.cmd medium 8 4 0
+=== PDC Distributed Ride Matching ===
+Scale=medium Workers=8 Threads=4 BatchSize=2048 MaxCandidates=0
+
+Distributed completed in 20263.503 ms (compute only)
+Distributed total time   20597.845 ms (includes connection wait)
+Distributed output written to C:\Users\umair\Downloads\PDC (2)\project\RideSync\results\distributed-medium.csv
+
+
+
+=== Done ===
+PS C:\Users\umair\Downloads\PDC (2)\project\RideSync> java -Xmx2048m -jar target\pdc-ride-matching-1.0.0.jar baseline --dataset data\large --output results\baseline-large.csv  
+Baseline completed in 116796.815 ms
+Results written to C:\Users\umair\Downloads\PDC (2)\project\RideSync\results\baseline-large.csv
+PS C:\Users\umair\Downloads\PDC (2)\project\RideSync> scripts\run-distributed.cmd large 1 4 0 
+=== PDC Distributed Ride Matching ===
+Scale=large Workers=1 Threads=4 BatchSize=2048 MaxCandidates=0
+
+Distributed completed in 65741.771 ms (compute only)
+Distributed total time   66156.052 ms (includes connection wait)
+Distributed output written to C:\Users\umair\Downloads\PDC (2)\project\RideSync\results\distributed-large.csv
+
+=== Done ===
+PS C:\Users\umair\Downloads\PDC (2)\project\RideSync> scripts\run-distributed.cmd large 2 4 0 
+=== PDC Distributed Ride Matching ===
+Scale=large Workers=2 Threads=4 BatchSize=2048 MaxCandidates=0
+
+Distributed completed in 56194.473 ms (compute only)
+Distributed total time   56658.852 ms (includes connection wait)
+Distributed output written to C:\Users\umair\Downloads\PDC (2)\project\RideSync\results\distributed-large.csv
+
+PS C:\Users\umair\Downloads\PDC (2)\project\RideSync> scripts\run-distributed.cmd large 4 4 0
+=== PDC Distributed Ride Matching ===
+Scale=large Workers=4 Threads=4 BatchSize=2048 MaxCandidates=0
+
+Distributed completed in 54825.613 ms (compute only)
+Distributed total time   55376.357 ms (includes connection wait)
+Distributed output written to C:\Users\umair\Downloads\PDC (2)\project\RideSync\results\distributed-large.csv
+
+
+PS C:\Users\umair\Downloads\PDC (2)\project\RideSync> scripts\run-distributed.cmd large 8 4 0
+=== PDC Distributed Ride Matching ===
+Scale=large Workers=8 Threads=4 BatchSize=2048 MaxCandidates=0
+
+Distributed completed in 54260.632 ms (compute only)
+Distributed total time   54885.535 ms (includes connection wait)
+Distributed output written to C:\Users\umair\Downloads\PDC (2)\project\RideSync\results\distributed-large.csv
+
+
+these are all the results
+
+
+
+
+

@@ -79,7 +79,8 @@ public final class App {
         String host = argValue(args, "--host", "127.0.0.1");
         int port = Integer.parseInt(argValue(args, "--port", "5000"));
         int threads = Integer.parseInt(argValue(args, "--threads", "4"));
-        new WorkerClient(workerId, host, port, threads).run();
+        int chunkSize = Integer.parseInt(argValue(args, "--chunk-size", "0"));
+        new WorkerClient(workerId, host, port, threads, chunkSize).run();
     }
 
     private static void runBenchmark(String[] args) throws Exception {

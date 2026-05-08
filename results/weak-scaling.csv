@@ -1,0 +1,4 @@
+workers,dataset,riders,riders_per_worker,T_par_ms,T_par_normalized
+1,small,50000,50000,625.679,1.000
+4,medium,500000,125000,19108.371,30.54
+8,large,1000000,125000,50522.299,80.75
